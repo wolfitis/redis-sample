@@ -36,8 +36,25 @@ const getReposCount = async (req, res) => {
   }
 }
 
+// Middleware
+const cache = (req, res, next) => {
+  const { username } = req.params;
+
+  client.get(username, (err, data) => {
+    if (err) throw err;
+
+    if (data) {
+      // if hits
+      res.send(setResp(username, data));
+    } else {
+      // if miss
+      next();
+    }
+  });
+}
+
 // Routes
-app.get('/repos/:username', getReposCount);
+app.get('/repos/:username', cache, getReposCount);
 
 
 app.listen(3000, () => {
