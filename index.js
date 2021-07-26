@@ -10,6 +10,10 @@ const client = redis.createClient(R_PORT);
 
 const app = express();
 
+// View
+const setResp = (username, repoCount) => {
+  return `<h2>${username} has ${repoCount} public repositories.</h2>`;
+}
 // Helper functions
 const getReposCount = async (req, res) => {
   try {
@@ -20,7 +24,13 @@ const getReposCount = async (req, res) => {
 
     const data = await respone.json();
 
-    res.send(data);
+    const repoCount = data.public_repos;
+
+    // Set data to redis
+    // we use setex for setting data alongwith expiry (in secs)
+    client.setex(username, 3600, repoCount);
+
+    res.send(setResp(username, repoCount));
   } catch (err) {
     res.status(500).send(err);
   }
